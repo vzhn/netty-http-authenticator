@@ -1,3 +1,26 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Vladimir Zhilin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package me.vzhilin.auth.parser;
 
 import java.text.ParseException;
@@ -15,9 +38,9 @@ public final class ChallengeResponseParser extends CommonAuthHeadersParser {
     }
 
     /**
-     * Парсим заголовки
+     * Parse headers
      * @return DigestChallengeResponse
-     * @throws ParseException ошибка
+     * @throws ParseException parse error
      */
     public ChallengeResponse parseChallenge() throws ParseException {
         ChallengeResponse challenge = new ChallengeResponse();
@@ -91,7 +114,7 @@ public final class ChallengeResponseParser extends CommonAuthHeadersParser {
             } else
             if (readIfMatches("qop")) {
                 readWord("=");
-                for (String option: parseList(readQuotedString())) {
+                for (String option: splitList(readQuotedString())) {
                     switch (option) {
                     case "auth":
                         challenge.addQopOption(QopOptions.AUTH);

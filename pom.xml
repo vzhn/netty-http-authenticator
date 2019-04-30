@@ -5,8 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.vzhilin</groupId>
-    <artifactId>netty-auth</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>netty-http-authenticator</artifactId>
+    <description>HTTP authenticator for Netty</description>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+    <version>1.0</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -38,8 +45,8 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>RELEASE</version>
-            <scope>compile</scope>
+            <version>9.4.18.v20190429</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

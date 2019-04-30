@@ -1,3 +1,26 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Vladimir Zhilin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package me.vzhilin.auth.parser;
 
 import java.text.ParseException;
@@ -6,15 +29,14 @@ import java.util.List;
 
 /** Common parser */
 class CommonAuthHeadersParser {
-    /** Строка */
     private final char[] chars;
 
-    /** Текущий символ */
+    /** current symbol position */
     private int pos;
 
     /**
-     * Парсер
-     * @param line строка
+     * header parser
+     * @param line header
      */
     CommonAuthHeadersParser(String line) {
         this.chars = line.toCharArray();
@@ -22,18 +44,13 @@ class CommonAuthHeadersParser {
     }
 
     /**
-     * @return номер текущего символа
+     * @return current symbol position
      */
     protected int getPos() {
         return pos;
     }
 
-    /**
-     * Разбираем список строк, разделенных запятыми
-     * @param list список строк
-     * @return отдельные строки
-     */
-    protected List<String> parseList(String list) {
+    protected List<String> splitList(String list) {
         List<String> rs = new ArrayList<>(2);
         for (String part: list.split(",")) {
             rs.add(part.trim());
@@ -41,10 +58,6 @@ class CommonAuthHeadersParser {
         return rs;
     }
 
-    /**
-     * @return строка в кавычках
-     * @throws ParseException ошибка
-     */
     protected String readQuotedString() throws ParseException {
         readWord("\"");
         StringBuilder word = new StringBuilder();
@@ -55,10 +68,6 @@ class CommonAuthHeadersParser {
         return word.toString();
     }
 
-    /**
-     * @return строка "не в кавычках"
-     * @throws ParseException ошибка
-     */
     protected String readUnquotedString() throws ParseException {
         StringBuilder word = new StringBuilder();
         while (hasNext() && ch() != ',') {
@@ -68,12 +77,6 @@ class CommonAuthHeadersParser {
         return word.toString();
     }
 
-    /**
-     * Считываем строку, если это возможно
-     * @param word строка
-     * @return true, если удалось считать строку
-     * @throws ParseException ошибка
-     */
     protected boolean readIfMatches(String word) throws ParseException {
         for (int i = 0; i < word.length(); i++) {
             if (pos + i >= chars.length){
@@ -91,32 +94,18 @@ class CommonAuthHeadersParser {
         return true;
     }
 
-    /**
-     * Считываем строку
-     * @param word строка
-     * @throws ParseException ошибка
-     */
     protected void readWord(String word) throws ParseException {
         if (!readIfMatches(word)) {
             throw new ParseException("expected: " + word, pos);
         }
     }
 
-    /**
-     * Считываем пробел
-     * @throws ParseException ошибка
-     */
     protected void readWs() throws ParseException {
         while (hasNext() && (ch() == ' ' || ch() == '\r' || ch() == '\n')) {
             ++pos;
         }
     }
 
-    /**
-     * Считываем следующий символ
-     * @return следующий символ
-     * @throws ParseException ошибка
-     */
     protected char readNext() throws ParseException {
         if (hasNext()) {
             return chars[pos++];
@@ -126,8 +115,8 @@ class CommonAuthHeadersParser {
     }
 
     /**
-     * @return текущий символ
-     * @throws ParseException ошибка
+     * @return current character
+     * @throws ParseException parse error
      */
     protected char ch() throws ParseException {
         if (hasNext()) {
@@ -137,9 +126,6 @@ class CommonAuthHeadersParser {
         }
     }
 
-    /**
-     * @return true, если есть следующий символ
-     */
     protected boolean hasNext() {
         return pos < chars.length;
     }
