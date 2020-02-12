@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.vzhilin.auth;
+package me.vzhilin.auth.netty;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -30,15 +30,17 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import me.vzhilin.auth.parser.*;
+import me.vzhilin.auth.DigestAuthenticator;
+import me.vzhilin.auth.parser.ChallengeResponseParser;
 
 /**
- * Provides digest and basic authentication
+ * transparent digest authentication
+ * NOTE: works only with keep-alive connections!
  */
-public class NettyHttpAuthenticator extends ChannelDuplexHandler {
+public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
     /** keep the client request */
     private FullHttpRequest request;
-    private HttpAuthenticator authenticator;
+    private DigestAuthenticator authenticator;
 
     private enum State {
         INIT,
@@ -49,20 +51,13 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
 
     private State state = State.INIT;
 
-    /**
-     * @param username
-     * @param password
-     */
-    public NettyHttpAuthenticator(String username, String password) {
-        this.authenticator = new HttpAuthenticator(username, password);
+    public TransparentNettyHttpAuthenticator(DigestAuthenticator authenticator) {
+        this.authenticator = authenticator;
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        if (request != null) {
-            request.release();
-            request = null;
-        }
+        freeRequest();
 
         super.channelInactive(ctx);
     }
@@ -74,20 +69,22 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
             HttpResponseStatus status = httpResponse.status();
             if (status.equals(HttpResponseStatus.OK)) {
                 state = State.COMPLETED_OK;
-                if (request != null) {
-                    request.release();
-                    request = null;
-                }
+                freeRequest();
             } else
             if (status.equals(HttpResponseStatus.UNAUTHORIZED)) {
                 if (state == State.COMPLETED_OK || state == State.INIT) {
                     state = State.CHALLENGE_RESPONSE_SENT;
-                    String authenticateHeader = httpResponse.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
-                    authenticator.challenge(new ChallengeResponseParser(authenticateHeader).parseChallenge());
-                    request.headers().set(HttpHeaderNames.AUTHORIZATION,
-                        authenticator.generateAuthHeader(request.method().name(), request.uri()));
-                    request.retain();
-                    ctx.writeAndFlush(request);
+                    if (ctx.channel().isOpen()) {
+                        String authenticateHeader = httpResponse.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
+                        authenticator.onResponseReceived(new ChallengeResponseParser(authenticateHeader).parseChallenge(), status.code());
+                        request.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.headerFor(request.method().name(), request.uri()));
+                        request.retain();
+                        ctx.writeAndFlush(request);
+                    } else {
+                        freeRequest();
+                        state = State.INIT;
+                    }
+
                     httpResponse.release();
                     return;
                 } else {
@@ -98,6 +95,13 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
         super.channelRead(ctx, msg);
     }
 
+    private void freeRequest() {
+        if (request != null) {
+            request.release();
+            request = null;
+        }
+    }
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof FullHttpRequest) {
@@ -106,7 +110,7 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
                 String method = req.method().name();
                 String uri = req.uri();
 
-                req.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.generateAuthHeader(method, uri));
+                req.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.headerFor(method, uri));
             }
             // keep the client request
             // When server responds 401 Unauthorized, resend the request with authentication header
