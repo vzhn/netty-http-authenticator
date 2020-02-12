@@ -1,4 +1,4 @@
-package me.vzhilin.jetty;
+package me.vzhilin.demo.server;
 
 import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.security.authentication.DigestAuthenticator;
