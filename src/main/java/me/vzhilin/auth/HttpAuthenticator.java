@@ -30,13 +30,14 @@ import me.vzhilin.auth.parser.QopOptions;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
 import java.util.Set;
 
 final class HttpAuthenticator {
     /** RNG for client nonce key generation */
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
     private final String username;
     private final String password;
 
