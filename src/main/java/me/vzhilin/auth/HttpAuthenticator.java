@@ -32,7 +32,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
 import java.util.Set;
 
 final class HttpAuthenticator {
