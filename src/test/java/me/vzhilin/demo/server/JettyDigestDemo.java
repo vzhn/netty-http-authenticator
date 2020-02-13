@@ -16,35 +16,43 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class JettyDigestDemo {
+    private static final String USER = "user";
+    private static final String PASS = "pass";
+
     public static void main(String... argv) throws Exception {
         new JettyDigestDemo().start();
     }
 
     private void start() throws Exception {
-        Server server = new Server();
-        ServletContextHandler servletHandler = new ServletContextHandler();
-        server.setHandler(servletHandler);
-        servletHandler.addServlet(BlockingServlet.class, "/status");
         ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
-        securityHandler.setAuthenticator(new DigestAuthenticator());
         final String realmName = "Realm";
-        securityHandler.setRealmName(realmName);
+
+        UserStore userStore = new UserStore();
+        userStore.addUser(USER, Credential.getCredential(PASS), new String[]{"role"});
+        userStore.start();
+
         HashLoginService loginService = new HashLoginService();
         loginService.setName(realmName);
-        UserStore userStore = new UserStore();
-        userStore.addUser("user", Credential.getCredential("pass"), new String[]{"role"});
-        userStore.start();
         loginService.setUserStore(userStore);
-        securityHandler.setLoginService(loginService);
-        ConstraintMapping cm = new ConstraintMapping();
+
         Constraint constraint = new Constraint();
         constraint.setName(Constraint.__DIGEST_AUTH);
         constraint.setRoles(new String[]{"role"});
         constraint.setAuthenticate(true);
+        ConstraintMapping cm = new ConstraintMapping();
         cm.setConstraint(constraint);
         cm.setPathSpec("/*");
+
+        securityHandler.setAuthenticator(new DigestAuthenticator());
+        securityHandler.setRealmName(realmName);
+        securityHandler.setLoginService(loginService);
         securityHandler.addConstraintMapping(cm);
+
+        Server server = new Server();
+        ServletContextHandler servletHandler = new ServletContextHandler();
+        servletHandler.addServlet(BlockingServlet.class, "/status");
         servletHandler.setSecurityHandler(securityHandler);
+        server.setHandler(servletHandler);
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(8090);
         server.setConnectors(new Connector[] {connector});
