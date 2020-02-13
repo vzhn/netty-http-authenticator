@@ -20,7 +20,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 
-public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObject> {
+public class NettyClientDemoHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {

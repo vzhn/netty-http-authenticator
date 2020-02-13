@@ -28,7 +28,7 @@ import me.vzhilin.auth.NettyHttpAuthenticator;
 
 import java.net.URI;
 
-public final class HttpSnoopClient {
+public final class NettyClientDemo {
     static final String URL = System.getProperty("url", "http://127.0.0.1:8090/status");
 
     public static void main(String[] args) throws Exception {
@@ -50,7 +50,7 @@ public final class HttpSnoopClient {
                      p.addLast(new HttpContentDecompressor());
                      p.addLast(new HttpObjectAggregator(1048576));
                      p.addLast(new NettyHttpAuthenticator("user", "pass"));
-                     p.addLast(new HttpSnoopClientHandler());
+                     p.addLast(new NettyClientDemoHandler());
                  }
              });
 
