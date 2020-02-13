@@ -40,7 +40,7 @@ public class Digester {
     private QopOptions qop;
     private String nonceCount;
     private String cnonce;
-    private final String entityBody = "";
+    private String entityBody = "";
 
     /**
      * @return response
@@ -154,5 +154,9 @@ public class Digester {
 
     public void setCnonce(String cnonce) {
         this.cnonce = cnonce;
+    }
+
+    public void setEntityBody(String entityBody) {
+        this.entityBody = entityBody;
     }
 }
