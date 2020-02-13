@@ -30,14 +30,12 @@ import me.vzhilin.auth.parser.QopOptions;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Random;
 import java.util.Set;
 
 final class HttpAuthenticator {
-    /** PRNG for client nonce key generation */
+    /** RNG for client nonce key generation */
     private final Random random = new Random();
     private final String username;
     private final String password;
@@ -72,74 +70,41 @@ final class HttpAuthenticator {
             }
         }
     }
-
-    void setCnonce(String cnonce) {
-        this.cnonce = cnonce;
-    }
-
     String generateAuthHeader(String httpMethod, String uri) {
         switch (challenge.getAuthMethod()) {
             case BASIC:
                 return "Basic " + Base64.getEncoder().encodeToString((username + ":" + password)
                         .getBytes(StandardCharsets.ISO_8859_1));
             case DIGEST:
-                DigestAlgorithm algorithm = challenge.getAlgorithm();
+                Digester digester = new Digester();
+                digester.setUsername(username);
+                digester.setPassword(password);
+                digester.setAlgorithm(challenge.getAlgorithm());
+                digester.setRealm(challenge.getRealm());
+                digester.setNonce(challenge.getNonce());
+                digester.setNonceCount(++nonceCount);
+                digester.setDigestUri(uri);
+                digester.setQop(qop);
+                digester.setCnonce(cnonce);
+                digester.setMethod(httpMethod);
+                String rsp = digester.response();
+
                 StringBuilder sb = new StringBuilder("Digest ");
-                String realm = challenge.getRealm();
-                String nonce = challenge.getNonce();
-                String opaque = challenge.getOpaque();
-                String rsp = response(httpMethod, uri, "");
-                String nc = String.format("%08x", nonceCount);
                 if (username != null) sb.append("username=\"").append(username).append("\",");
-                if (realm != null) sb.append("realm=\"").append(realm).append("\",");
-                if (nonce != null) sb.append("nonce=\"").append(nonce).append("\",");
-                if (opaque != null) sb.append("opaque=\"").append(opaque).append("\",");
-                if (uri != null) sb.append("uri=\"").append(uri).append("\",");
+                sb.append("realm=\"").append(challenge.getRealm()).append("\",");
+                sb.append("nonce=\"").append(challenge.getNonce()).append("\",");
+                if (challenge.getOpaque() != null) sb.append("opaque=\"").append(challenge.getOpaque()).append("\",");
+                sb.append("uri=\"").append(uri).append("\",");
                 if (algorithm != null) sb.append("algorithm=").append(algorithm).append(",");
-                if (rsp != null) sb.append("response=\"").append(rsp).append("\",");
-                if (qop != null)  sb.append("qop=").append(qop).append(",");
-                if (nc != null)  sb.append("nc=").append(nc).append(",");
-                if (cnonce != null) sb.append("cnonce=\"").append(cnonce).append("\",");
+                sb.append("response=\"").append(rsp).append("\",");
+                sb.append("qop=").append(qop).append(",");
+                sb.append("nc=").append(digester.getNonceCount()).append(",");
+                sb.append("cnonce=\"").append(cnonce).append("\",");
                 sb.setLength(sb.length() - 1);
                 return sb.toString();
             default:
                 throw new RuntimeException("unimplemented: " + challenge.getAuthMethod());
         }
-    }
-
-    /**
-     * @return response
-     */
-    String response(String method, String digestUri, String entityBody) {
-        String realm = challenge.getRealm();
-        String nonce = challenge.getNonce();
-        String nc = String.format("%08x", ++nonceCount);
-        String ha1;
-        if (!algorithm.isSess()) {
-            ha1 = h(username +":"+ realm +":"+password, algorithm);
-        } else {
-            String local = h(username +":"+ realm +":"+password, algorithm);
-            ha1 = h(local+":"+ nonce +":"+ cnonce, algorithm);
-        }
-
-        String ha2;
-        if (qop == null || qop == QopOptions.AUTH) {
-            ha2 = h(method+":"+ digestUri, algorithm);
-        } else
-        if (qop == QopOptions.AUTH_INT) {
-            ha2 = h(method+":"+ digestUri +":"+ h(entityBody, algorithm), algorithm);
-        } else {
-            throw new RuntimeException();
-        }
-
-        String response;
-        if (qop == null) {
-            response = h(ha1+":"+nonce+":"+ha2, algorithm);
-        } else {
-            response = h(ha1+":"+nonce+":"+nc+":"+cnonce+":"+qop+":"+ha2, algorithm);
-        }
-
-        return response;
     }
 
     /** generate new random client nonce */
@@ -159,39 +124,5 @@ final class HttpAuthenticator {
         }
 
         return null;
-    }
-
-    private String h(String string, DigestAlgorithm algorithm) {
-        MessageDigest instance;
-
-        try {
-            if (algorithm == DigestAlgorithm.MD5 || algorithm == DigestAlgorithm.MD5_SESS) {
-                instance = MessageDigest.getInstance("MD5");
-            } else
-            if (algorithm == DigestAlgorithm.SHA_256 || algorithm == DigestAlgorithm.SHA_256_SESS) {
-                instance = MessageDigest.getInstance("SHA-256");
-            } else
-            if (algorithm == DigestAlgorithm.SHA_512_256 || algorithm == DigestAlgorithm.SHA_512_256_SESS) {
-                instance = MessageDigest.getInstance("SHA-512/256");
-            } else {
-                throw new RuntimeException("Unsupported: " + algorithm);
-            }
-            return bytesToHex(instance.digest(string.getBytes()));
-        } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private static String bytesToHex(final byte[] bytes) {
-        final int numBytes = bytes.length;
-        final char[] container = new char[numBytes * 2];
-
-        for (int i = 0; i < numBytes; i++) {
-            final int b = bytes[i] & 0xFF;
-            container[i * 2] = Character.forDigit(b >>> 4, 0x10);
-            container[i * 2 + 1] = Character.forDigit(b & 0xF, 0x10);
-        }
-
-        return new String(container);
     }
 }
