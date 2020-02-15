@@ -76,7 +76,9 @@ public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
                     state = State.CHALLENGE_RESPONSE_SENT;
                     if (ctx.channel().isOpen()) {
                         String authenticateHeader = httpResponse.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
-                        authenticator.onResponseReceived(new ChallengeResponseParser(authenticateHeader).parseChallenge(), status.code());
+                        if (authenticateHeader != null) {
+                            authenticator.onResponseReceived(new ChallengeResponseParser(authenticateHeader).parseChallenge(), status.code());
+                        }
                         request.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.headerFor(request.method().name(), request.uri()));
                         request.retain();
                         ctx.writeAndFlush(request);
@@ -106,7 +108,7 @@ public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest req = (FullHttpRequest) msg;
-            if (state == State.COMPLETED_OK) {
+            if (state == State.COMPLETED_OK || state == State.CHALLENGE_RESPONSE_SENT) {
                 String method = req.method().name();
                 String uri = req.uri();
 
