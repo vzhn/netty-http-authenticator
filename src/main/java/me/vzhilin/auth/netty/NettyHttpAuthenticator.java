@@ -30,8 +30,6 @@ import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
 import me.vzhilin.auth.parser.ChallengeResponseParser;
 
-import java.net.InetSocketAddress;
-
 public class NettyHttpAuthenticator extends ChannelDuplexHandler {
     private final DigestAuthenticator authenticator;
 
@@ -60,9 +58,10 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
 
             String method = req.method().name();
             String uri = req.uri();
-            InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-            address.getHostString();
-            authenticator.headerFor(method, uri).ifPresent(s -> req.headers().set(HttpHeaderNames.AUTHORIZATION, s));
+            final String header = authenticator.autorizationHeader(method, uri);
+            if (header != null) {
+                req.headers().set(HttpHeaderNames.AUTHORIZATION, header);
+            }
         }
         super.write(ctx, msg, promise);
     }

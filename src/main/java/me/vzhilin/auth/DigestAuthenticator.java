@@ -6,7 +6,6 @@ import me.vzhilin.auth.digester.Ha1Supplier;
 import me.vzhilin.auth.parser.ChallengeResponse;
 import me.vzhilin.auth.parser.QopOptions;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class DigestAuthenticator {
@@ -56,13 +55,13 @@ public class DigestAuthenticator {
         return null;
     }
 
-    public Optional<String> headerFor(String method, String uri) {
-        return headerFor(method, uri, "");
+    public String autorizationHeader(String method, String uri) {
+        return autorizationHeader(method, uri, "");
     }
 
-    public synchronized Optional<String> headerFor(String method, String uri, String entityBody) {
+    public synchronized String autorizationHeader(String method, String uri, String entityBody) {
         if (digester.getNonce() == null) {
-            return Optional.empty();
+            return null;
         }
         Ha1 ha1 = ha1Supplier.hash(digester.getAlgorithm(), realm);
         String response = digester.response(ha1, uri, method, entityBody);
@@ -70,8 +69,7 @@ public class DigestAuthenticator {
         final String realm = ha1.getRealm();
         final DigestAuthenticationHeader header = new DigestAuthenticationHeader(opaque, uri, username, realm, response, digester);
         final String headerValue = header.toString();
-        final Optional<String> result = Optional.of(headerValue);
         digester.incNonceCount();
-        return result;
+        return headerValue;
     }
 }

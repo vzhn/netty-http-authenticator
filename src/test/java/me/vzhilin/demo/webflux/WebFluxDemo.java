@@ -19,7 +19,6 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 
@@ -46,8 +45,10 @@ public class WebFluxDemo {
                             HttpRequest request = (HttpRequest) msg;
                             String authorization = request.headers().get(HttpHeaderNames.AUTHORIZATION);
                             if (authorization == null) {
-                                final Optional<String> maybeHeader = auth.autorizationHeader(request.method().name(), request.uri());
-                                maybeHeader.ifPresent((v) -> request.headers().set(HttpHeaderNames.AUTHORIZATION, v));
+                                final String authorizationHeader = auth.autorizationHeader(request.method().name(), request.uri());
+                                if (authorizationHeader != null) {
+                                    request.headers().set(HttpHeaderNames.AUTHORIZATION, authorizationHeader);
+                                }
                             }
                         }
                         super.write(ctx, msg, promise);
