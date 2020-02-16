@@ -27,6 +27,7 @@ import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.UserStore;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -41,24 +42,29 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class JettyDemoServer {
+    private static final String REALM = "Realm";
     private final UserStore userStore = new UserStore();
     private final ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
     private Server server;
 
     public static void main(String... argv) throws Exception {
-        final JettyDemoServer demoServer = new JettyDemoServer("Realm");
+        final JettyDemoServer demoServer = new JettyDemoServer();
         demoServer.addUser("user", "pass", "role");
         demoServer.addConstraintMapping("/*", "role");
         demoServer.start();
     }
 
-    public JettyDemoServer(String realm) {
+    public JettyDemoServer() {
+        this(true);
+    }
+
+    public JettyDemoServer(boolean digest) {
         HashLoginService loginService = new HashLoginService();
-        loginService.setName(realm);
+        loginService.setName("Realm");
         loginService.setUserStore(userStore);
 
-        securityHandler.setAuthenticator(new DigestAuthenticator());
-        securityHandler.setRealmName(realm);
+        securityHandler.setAuthenticator(digest ? new DigestAuthenticator() : new BasicAuthenticator());
+        securityHandler.setRealmName(REALM);
         securityHandler.setLoginService(loginService);
     }
 

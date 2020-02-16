@@ -16,7 +16,7 @@ import java.net.URI;
 public final class DigestAuthenticatorTest extends Assert {
     @Test
     public void digestAuth() throws Exception {
-        final JettyDemoServer demoServer = new JettyDemoServer("Realm");
+        final JettyDemoServer demoServer = new JettyDemoServer();
         final String username = "user";
         final String password = "pass";
         final String role = "role";

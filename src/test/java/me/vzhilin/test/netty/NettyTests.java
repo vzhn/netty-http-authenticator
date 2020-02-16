@@ -7,11 +7,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
+import me.vzhilin.auth.netty.BasicNettyHttpAuthenticator;
 import me.vzhilin.auth.netty.DigestNettyHttpAuthenticator;
 import me.vzhilin.auth.netty.TransparentDigestNettyHttpAuthenticator;
 import me.vzhilin.demo.server.JettyDemoServer;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -20,30 +19,52 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 
 public class NettyTests {
-    private final String realm = "Realm";
     private final String username = "user";
     private final String password = "pass";
     private final String role = "role";
     private final String path = "/status";
     private final String host = "127.0.0.1";
 
-    private JettyDemoServer digestServer;
+    @Test
+    public void basicAuthenticatorTest() throws Exception {
+        JettyDemoServer basicServer = new JettyDemoServer(false);
+        basicServer.addUser(username, password, role);
+        basicServer.addConstraintMapping(path, role);
+        basicServer.start();
 
-    @Before
-    public void setUp() throws Exception {
-        digestServer = new JettyDemoServer(realm);
-        digestServer.addUser(username, password, role);
-        digestServer.addConstraintMapping(path, role);
-        digestServer.start();
-    }
+        final NettyHttpClientHandler nettyHttpClientHandler = new NettyHttpClientHandler();
 
-    @After
-    public void tearDown() throws Exception {
-        digestServer.stop();
+        NettyHttpClient nettyClient = new NettyHttpClient(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline p = ch.pipeline();
+                p.addLast(new HttpClientCodec());
+                p.addLast(new HttpContentDecompressor());
+                p.addLast(new BasicNettyHttpAuthenticator(username, password));
+                p.addLast(nettyHttpClientHandler);
+            }
+        });
+
+        // Make the connection attempt.
+        Channel ch = nettyClient.connect("127.0.0.1", 8090);
+        CompletableFuture<Object> responseFuture = new CompletableFuture<>();
+        nettyHttpClientHandler.setResponseFuture(responseFuture);
+
+        ch.writeAndFlush(makeHttpRequest());
+        HttpResponse response = (HttpResponse) responseFuture.get(5, TimeUnit.SECONDS);
+        assertEquals(HttpResponseStatus.OK, response.status());
+
+        nettyClient.stop();
+        basicServer.stop();
     }
 
     @Test
     public void transparentAuthenticatorTest() throws Exception {
+        JettyDemoServer digestServer = new JettyDemoServer();
+        digestServer.addUser(username, password, role);
+        digestServer.addConstraintMapping(path, role);
+        digestServer.start();
+
         DigestAuthenticator authenticator = new DigestAuthenticator(username, password);
         final NettyHttpClientHandler nettyHttpClientHandler = new NettyHttpClientHandler();
 
@@ -69,10 +90,16 @@ public class NettyTests {
         assertEquals(HttpResponseStatus.OK, response.status());
 
         nettyClient.stop();
+        digestServer.stop();
     }
 
     @Test
     public void defaultAuthenticatorTest() throws Exception {
+        JettyDemoServer digestServer = new JettyDemoServer();
+        digestServer.addUser(username, password, role);
+        digestServer.addConstraintMapping(path, role);
+        digestServer.start();
+
         DigestAuthenticator authenticator = new DigestAuthenticator(username, password);
         final NettyHttpClientHandler nettyHttpClientHandler = new NettyHttpClientHandler();
 
@@ -102,6 +129,7 @@ public class NettyTests {
         assertEquals(HttpResponseStatus.OK, nextResponse.status());
 
         nettyClient.stop();
+        digestServer.stop();
     }
 
     private HttpRequest makeHttpRequest() {

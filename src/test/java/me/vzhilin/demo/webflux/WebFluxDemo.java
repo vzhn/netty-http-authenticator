@@ -23,7 +23,7 @@ import java.util.function.BiConsumer;
 
 public class WebFluxDemo {
     public static void main(String... argv) throws Exception {
-        final JettyDemoServer demoServer = new JettyDemoServer("Realm");
+        final JettyDemoServer demoServer = new JettyDemoServer();
         final String username = "user";
         final String password = "pass";
         final String role = "role";
