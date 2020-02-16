@@ -23,12 +23,15 @@
  */
 package me.vzhilin.demo.server;
 
-import org.eclipse.jetty.security.*;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.UserStore;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
@@ -38,40 +41,52 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class JettyDigestDemo {
-    private static final String USER = "user";
-    private static final String PASS = "pass";
+public class JettyDemoServer {
+    private static final String REALM = "Realm";
+    private final UserStore userStore = new UserStore();
+    private final ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
+    private Server server;
 
     public static void main(String... argv) throws Exception {
-        new JettyDigestDemo().start();
+        final JettyDemoServer demoServer = new JettyDemoServer();
+        demoServer.addUser("user", "pass", "role");
+        demoServer.addConstraintMapping("/*", "role");
+        demoServer.start();
     }
 
-    private void start() throws Exception {
-        ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
-        final String realmName = "Realm";
+    public JettyDemoServer() {
+        this(true);
+    }
 
-        UserStore userStore = new UserStore();
-        userStore.addUser(USER, Credential.getCredential(PASS), new String[]{"role"});
-        userStore.start();
-
+    public JettyDemoServer(boolean digest) {
         HashLoginService loginService = new HashLoginService();
-        loginService.setName(realmName);
+        loginService.setName("Realm");
         loginService.setUserStore(userStore);
 
+        securityHandler.setAuthenticator(digest ? new DigestAuthenticator() : new BasicAuthenticator());
+        securityHandler.setRealmName(REALM);
+        securityHandler.setLoginService(loginService);
+    }
+
+    public void addConstraintMapping(String pathSpec, String role) {
         Constraint constraint = new Constraint();
         constraint.setName(Constraint.__DIGEST_AUTH);
-        constraint.setRoles(new String[]{"role"});
+        constraint.setRoles(new String[]{role});
         constraint.setAuthenticate(true);
         ConstraintMapping cm = new ConstraintMapping();
         cm.setConstraint(constraint);
-        cm.setPathSpec("/*");
-
-        securityHandler.setAuthenticator(new DigestAuthenticator());
-        securityHandler.setRealmName(realmName);
-        securityHandler.setLoginService(loginService);
+        cm.setPathSpec(pathSpec);
         securityHandler.addConstraintMapping(cm);
+    }
 
-        Server server = new Server();
+    public void addUser(String user, String pass, String role) {
+        userStore.addUser(user, Credential.getCredential(pass), new String[]{role});
+    }
+
+    public void start() throws Exception {
+        userStore.start();
+
+        server = new Server();
         ServletContextHandler servletHandler = new ServletContextHandler();
         servletHandler.addServlet(BlockingServlet.class, "/status");
         servletHandler.setSecurityHandler(securityHandler);
@@ -80,6 +95,10 @@ public class JettyDigestDemo {
         connector.setPort(8090);
         server.setConnectors(new Connector[] {connector});
         server.start();
+    }
+
+    public void stop() throws Exception {
+        server.stop();
     }
 
     public static class BlockingServlet extends HttpServlet {

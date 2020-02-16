@@ -23,6 +23,7 @@
  */
 package me.vzhilin.auth.parser;
 
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +43,10 @@ public class ChallengeResponse {
     private DigestAlgorithm algorithms;
     private String charset;
     private Set<QopOptions> qopOptions = new HashSet<>(2);
+
+    public static ChallengeResponse of(String authenticateHeader) throws ParseException {
+        return new ChallengeResponseParser(authenticateHeader).parseChallenge();
+    }
 
     public void setAuthMethod(AuthMethod method) {
         this.method = method;

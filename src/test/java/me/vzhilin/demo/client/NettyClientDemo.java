@@ -24,7 +24,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
-import me.vzhilin.auth.NettyHttpAuthenticator;
+import me.vzhilin.auth.DigestAuthenticator;
+import me.vzhilin.auth.netty.DigestNettyHttpAuthenticator;
 
 import java.net.URI;
 
@@ -36,8 +37,9 @@ public final class NettyClientDemo {
         String host = uri.getHost() == null? "127.0.0.1" : uri.getHost();
         int port = uri.getPort();
 
+        final DigestAuthenticator authenticator = new DigestAuthenticator("user", "pass");
         // Configure the client.
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(1); // todo: avoid possible nonceCount race
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -48,30 +50,33 @@ public final class NettyClientDemo {
                      ChannelPipeline p = ch.pipeline();
                      p.addLast(new HttpClientCodec());
                      p.addLast(new HttpContentDecompressor());
-                     p.addLast(new HttpObjectAggregator(1048576));
-                     p.addLast(new NettyHttpAuthenticator("user", "pass"));
+                     p.addLast(new DigestNettyHttpAuthenticator(authenticator));
                      p.addLast(new NettyClientDemoHandler());
                  }
              });
+            connectAndSend(uri, host, port, b); // the first one got 401
+            connectAndSend(uri, host, port, b); // the second attempt succeeds
 
-            // Make the connection attempt.
-            Channel ch = b.connect(host, port).sync().channel();
-
-            // Prepare the HTTP request.
-            HttpRequest request = new DefaultFullHttpRequest(
-                    HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
-            request.headers().set(HttpHeaderNames.HOST, host);
-            request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-            request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
-
-            // Send the HTTP request.
-            ch.writeAndFlush(request);
-
-            // Wait for the server to close the connection.
-            ch.closeFuture().sync();
         } finally {
             // Shut down executor threads to exit.
             group.shutdownGracefully();
         }
+    }
+
+    private static void connectAndSend(URI uri, String host, int port, Bootstrap b) throws InterruptedException {
+        // Make the connection attempt.
+        Channel ch = b.connect(host, port).sync().channel();
+
+        // Prepare the HTTP request.
+        HttpRequest request = new DefaultFullHttpRequest(
+                HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
+        request.headers().set(HttpHeaderNames.HOST, host);
+        request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
+
+        // Send the HTTP request.
+        ch.writeAndFlush(request);
+
+        // Wait for the server to close the connection.
+        ch.closeFuture().sync();
     }
 }

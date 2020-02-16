@@ -27,8 +27,8 @@ public class NettyClientDemoHandler extends SimpleChannelInboundHandler<HttpObje
         if (msg instanceof HttpResponse) {
             HttpResponse response = (HttpResponse) msg;
 
-            System.err.println("STATUS: " + response.getStatus());
-            System.err.println("VERSION: " + response.getProtocolVersion());
+            System.err.println("STATUS: " + response.status());
+            System.err.println("VERSION: " + response.protocolVersion());
             System.err.println();
 
             if (!response.headers().isEmpty()) {
