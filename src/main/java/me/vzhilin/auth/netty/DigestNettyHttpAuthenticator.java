@@ -30,10 +30,10 @@ import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
 import me.vzhilin.auth.parser.ChallengeResponse;
 
-public class NettyHttpAuthenticator extends ChannelDuplexHandler {
+public class DigestNettyHttpAuthenticator extends ChannelDuplexHandler {
     private final DigestAuthenticator authenticator;
 
-    public NettyHttpAuthenticator(DigestAuthenticator authenticator) {
+    public DigestNettyHttpAuthenticator(DigestAuthenticator authenticator) {
         this.authenticator = authenticator;
     }
 

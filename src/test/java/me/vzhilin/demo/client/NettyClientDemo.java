@@ -25,7 +25,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
-import me.vzhilin.auth.netty.NettyHttpAuthenticator;
+import me.vzhilin.auth.netty.DigestNettyHttpAuthenticator;
 
 import java.net.URI;
 
@@ -50,7 +50,7 @@ public final class NettyClientDemo {
                      ChannelPipeline p = ch.pipeline();
                      p.addLast(new HttpClientCodec());
                      p.addLast(new HttpContentDecompressor());
-                     p.addLast(new NettyHttpAuthenticator(authenticator));
+                     p.addLast(new DigestNettyHttpAuthenticator(authenticator));
                      p.addLast(new NettyClientDemoHandler());
                  }
              });

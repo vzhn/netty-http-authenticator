@@ -37,7 +37,7 @@ import me.vzhilin.auth.parser.ChallengeResponse;
  * transparent digest authentication
  * NOTE: works only with keep-alive connections!
  */
-public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
+public class TransparentDigestNettyHttpAuthenticator extends ChannelDuplexHandler {
     /** keep the client request */
     private FullHttpRequest request;
     private DigestAuthenticator authenticator;
@@ -51,7 +51,7 @@ public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
 
     private State state = State.INIT;
 
-    public TransparentNettyHttpAuthenticator(DigestAuthenticator authenticator) {
+    public TransparentDigestNettyHttpAuthenticator(DigestAuthenticator authenticator) {
         this.authenticator = authenticator;
     }
 
