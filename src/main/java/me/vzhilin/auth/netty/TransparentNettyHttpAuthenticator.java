@@ -31,7 +31,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import me.vzhilin.auth.DigestAuthenticator;
-import me.vzhilin.auth.parser.ChallengeResponseParser;
+import me.vzhilin.auth.parser.ChallengeResponse;
 
 /**
  * transparent digest authentication
@@ -77,7 +77,7 @@ public class TransparentNettyHttpAuthenticator extends ChannelDuplexHandler {
                     if (ctx.channel().isOpen()) {
                         String authenticateHeader = httpResponse.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
                         if (authenticateHeader != null) {
-                            authenticator.onResponseReceived(new ChallengeResponseParser(authenticateHeader).parseChallenge(), status.code());
+                            authenticator.onResponseReceived(ChallengeResponse.of(authenticateHeader), status.code());
                         }
                         final String auth = authenticator.autorizationHeader(request.method().name(), request.uri());
                         if (auth != null) {

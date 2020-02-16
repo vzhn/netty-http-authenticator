@@ -1,14 +1,13 @@
 package me.vzhilin.demo;
 
-import java.text.ParseException;
-
 import me.vzhilin.auth.digester.Digester;
+import me.vzhilin.auth.digester.Ha1;
 import me.vzhilin.auth.parser.ChallengeResponse;
-import me.vzhilin.auth.parser.ChallengeResponseParser;
 import me.vzhilin.auth.parser.DigestAlgorithm;
 import me.vzhilin.auth.parser.QopOptions;
-import me.vzhilin.auth.digester.Ha1;
 import org.junit.Test;
+
+import java.text.ParseException;
 
 import static junit.framework.TestCase.*;
 
@@ -20,16 +19,13 @@ public class DigesterTests {
         String opaque = "5ccc069c403ebaf9f0171e9517f40e41";
         boolean stale = true;
 
-        ChallengeResponseParser parser =
-            new ChallengeResponseParser(
-            "Digest realm=\"" + realm + "\","
+        ChallengeResponse response =
+            ChallengeResponse.of("Digest realm=\"" + realm + "\","
                 + "qop=\"auth,auth-int\","
                 + "nonce=\"" + nonce + "\","
                 + "stale=" + stale + ","
                 + "algorithm=MD5-sess,"
                 + "opaque=\"" + opaque + "\"");
-
-        ChallengeResponse response = parser.parseChallenge();
         assertTrue(response.hasQop(QopOptions.AUTH));
         assertTrue(response.hasQop(QopOptions.AUTH_INT));
         assertEquals(stale, response.isStale());

@@ -2,7 +2,6 @@ package me.vzhilin.test;
 
 import me.vzhilin.auth.DigestAuthenticator;
 import me.vzhilin.auth.parser.ChallengeResponse;
-import me.vzhilin.auth.parser.ChallengeResponseParser;
 import me.vzhilin.demo.server.JettyDemoServer;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,8 +33,8 @@ public final class DigestAuthenticatorTest extends Assert {
         EntityUtils.consume(firstResponse.getEntity());
         assertEquals("expected unathorized",401, firstResponse.getStatusLine().getStatusCode());
 
-        final ChallengeResponse challenge = new ChallengeResponseParser(firstResponse.getFirstHeader("WWW-Authenticate").getValue()).parseChallenge();
-        authenticator.onResponseReceived(challenge, firstResponse.getStatusLine().getStatusCode());
+        authenticator.onResponseReceived(ChallengeResponse.of(firstResponse.getFirstHeader("WWW-Authenticate").getValue()),
+            firstResponse.getStatusLine().getStatusCode());
 
         request.setHeader("Authorization", authenticator.autorizationHeader("GET", uri.getPath()));
         CloseableHttpResponse secondResponse = httpClient.execute(request);

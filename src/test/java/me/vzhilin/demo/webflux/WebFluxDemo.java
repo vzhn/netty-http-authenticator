@@ -8,7 +8,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import me.vzhilin.auth.DigestAuthenticator;
 import me.vzhilin.auth.parser.ChallengeResponse;
-import me.vzhilin.auth.parser.ChallengeResponseParser;
 import me.vzhilin.demo.server.JettyDemoServer;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -60,8 +59,7 @@ public class WebFluxDemo {
                             HttpResponse response = (HttpResponse) msg;
                             final String authenticateHeader = response.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
                             if (authenticateHeader != null) {
-                                ChallengeResponse challengeResponse = new ChallengeResponseParser(authenticateHeader).parseChallenge();
-                                auth.onResponseReceived(challengeResponse, response.status().code());
+                                auth.onResponseReceived(ChallengeResponse.of(authenticateHeader), response.status().code());
                             }
                         }
                         super.channelRead(ctx, msg);

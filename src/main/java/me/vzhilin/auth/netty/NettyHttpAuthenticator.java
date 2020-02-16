@@ -28,7 +28,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
-import me.vzhilin.auth.parser.ChallengeResponseParser;
+import me.vzhilin.auth.parser.ChallengeResponse;
 
 public class NettyHttpAuthenticator extends ChannelDuplexHandler {
     private final DigestAuthenticator authenticator;
@@ -45,7 +45,7 @@ public class NettyHttpAuthenticator extends ChannelDuplexHandler {
 
             String authenticateHeader = httpResponse.headers().get(HttpHeaderNames.WWW_AUTHENTICATE);
             if (authenticateHeader != null) {
-                authenticator.onResponseReceived(new ChallengeResponseParser(authenticateHeader).parseChallenge(), status.code());
+                authenticator.onResponseReceived(ChallengeResponse.of(authenticateHeader), status.code());
             }
         }
         super.channelRead(ctx, msg);
