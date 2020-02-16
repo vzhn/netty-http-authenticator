@@ -80,10 +80,14 @@ Typical client-server exchange may look like this:
 ![Digest authenticator](digest-auth-sequence.png)
 
 
-## Installing
-
-```
-mvn clean install
+## Downloading from the Maven central repository
+Add the following dependency section to your pom.xml:
+```xml
+<dependency>
+    <groupId>io.github.vzhn</groupId>
+    <artifactId>netty-http-authenticator</artifactId>
+    <version>1.1</version>
+</dependency>
 ```
 
 ## How to contribute
