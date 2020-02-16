@@ -1,4 +1,5 @@
 ![Travis (.org)](https://img.shields.io/travis/vzhn/netty-http-authenticator?style=plastic)
+![Maven Central](https://img.shields.io/maven-central/v/io.github.vzhn/netty-http-authenticator)
 
 ### BasicNetyHttpAuthenticator
 `BasicNettyHttpAuthenticator` just appends the auth header to an every request.
