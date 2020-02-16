@@ -1,18 +1,7 @@
+![Travis (.org)](https://img.shields.io/travis/vzhn/netty-http-authenticator?style=plastic)
 
-`NettyHttpAuthenticator` is a [Netty](https://github.com/netty/netty) channel handler which helps your handlers
-send requests to servers that require authentication.
-
-## Use cases
-`NettyHttpAuthenticator` implements basic and digest authentication methods for HTTP and RTSP protocols. 
-Digest authentication method supports "none" and "auth" quality of protection (qop) with
-`MD5` and `SHA-256` hashing algorithms. It's enough in most cases.
-
-
-## Getting Started
-
-`NettyHttpAuthenticator` must be initialized with `username` and `password` and placed in a channel pipeline between `HttpObjectAggregator` 
-and handler that processes server responses, like this:
-
+### BasicNetyHttpAuthenticator
+`BasicNettyHttpAuthenticator` just appends auth header to every request.
 ```java
 Bootstrap b = new Bootstrap();
 b.group(group)
@@ -23,14 +12,63 @@ b.group(group)
          ChannelPipeline p = ch.pipeline();
          p.addLast(new HttpClientCodec());
          p.addLast(new HttpObjectAggregator(1048576));
-         p.addLast(new NettyHttpAuthenticator("scott", "tiger"));
+         p.addLast(new BasicNettyHttpAuthenticator("scott", "tiger"));
          p.addLast(new HttpClientHandler());
      }
  });
 ```
 
-### How it works
-`NettyHttpAuthenticator` intercepts the client request, and remembers it
+### DigestNettyHttpAuthenticator
+```java
+DigestAuthenticator digestAuthenticator = new DigestAuthenticator("scott", "tiger");
+
+Bootstrap b = new Bootstrap();
+b.group(group)
+ .channel(NioSocketChannel.class)
+ .handler(new ChannelInitializer<SocketChannel>() {
+     @Override
+     protected void initChannel(SocketChannel ch) {
+         ChannelPipeline p = ch.pipeline();
+         p.addLast(new HttpClientCodec());
+         p.addLast(new DigestNettyHttpAuthenticator(digestAuthenticator));
+         p.addLast(new HttpClientHandler());
+     }
+ });
+
+...
+  ch.writeAndFlush(firstSequest); // the first request got 401 error
+  ch.writeAndFlush(secondRequest); // the second will succeeded if credentinals are not wrong
+```
+
+### TransparentDigestNettyHttpAuthenticator
+This is the tricky one. It works only with aggregated HTTP messages: `FullHttpRequest` and `FullHttpResponse` and keep-alive connection. 
+The solution that fits for `RTSP`.
+
+`TransparentDigestNettyHttpAuthenticator` must be initialized with `username` and `password` and placed in a channel pipeline between `HttpObjectAggregator` 
+and handler that processes server responses, like this:
+
+```java
+DigestAuthenticator digestAuthenticator = new DigestAuthenticator("scott", "tiger");
+
+Bootstrap b = new Bootstrap();
+b.group(group)
+ .channel(NioSocketChannel.class)
+ .handler(new ChannelInitializer<SocketChannel>() {
+     @Override
+     protected void initChannel(SocketChannel ch) {
+         ChannelPipeline p = ch.pipeline();
+         p.addLast(new HttpClientCodec());
+         p.addLast(new HttpObjectAggregator(1048576)); // NB! works only with aggregated request/response
+         p.addLast(new TransparentDigestNettyHttpAuthenticator(authenticator));
+         p.addLast(new HttpClientHandler());
+     }
+ });
+..
+  ch.writeAndFlush(request); // the first attempt will succeeded if credentinals are not wrong
+```
+
+##### How it works
+`TransparentDigestNettyHttpAuthenticator` intercepts the client request, and remembers it
 * If a server returns the `401 Unathorized` error,  authenticator resends the request with proper authorization header
 * If a server returns `200 OK`, authenticator attaches the authorization header to all subsequent requests
 * If a server returns the `401 Unathorized` error again, and `stale=false`, authenticator pass that *error* to client (bad credentials)
@@ -40,16 +78,15 @@ Typical client-server exchange may look like this:
 
 ![Digest authenticator](digest-auth-sequence.png)
 
-### Installing
+
+## Installing
 
 ```
 mvn clean install
 ```
 
-
 ## How to contribute
 Make your changes, and submit a pull request. Contributions are welcome!
-
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details

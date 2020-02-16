@@ -24,12 +24,14 @@
 package me.vzhilin.auth.netty;
 
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.*;
 import me.vzhilin.auth.DigestAuthenticator;
 import me.vzhilin.auth.parser.ChallengeResponse;
 
+@ChannelHandler.Sharable
 public class DigestNettyHttpAuthenticator extends ChannelDuplexHandler {
     private final DigestAuthenticator authenticator;
 
