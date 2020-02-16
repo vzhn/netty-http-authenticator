@@ -11,7 +11,7 @@
             <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -190,6 +190,6 @@
         <connection>scm:git:git://github.com/vzhn/netty-http-authenticator.git</connection>
         <developerConnection>scm:git:git@github.com/vzhn/netty-http-authenticator.git</developerConnection>
         <url>https://github.com/vzhn/netty-http-authenticator.git</url>
-        <tag>HEAD</tag>
+        <tag>v1.1</tag>
     </scm>
 </project>
