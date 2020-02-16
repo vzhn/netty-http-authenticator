@@ -1,7 +1,7 @@
 ![Travis (.org)](https://img.shields.io/travis/vzhn/netty-http-authenticator?style=plastic)
 
 ### BasicNetyHttpAuthenticator
-`BasicNettyHttpAuthenticator` just appends auth header to every request.
+`BasicNettyHttpAuthenticator` just appends the auth header to an every request.
 ```java
 Bootstrap b = new Bootstrap();
 b.group(group)
