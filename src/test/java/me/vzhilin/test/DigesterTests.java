@@ -1,4 +1,4 @@
-package me.vzhilin.demo;
+package me.vzhilin.test;
 
 import me.vzhilin.auth.digester.Digester;
 import me.vzhilin.auth.digester.Ha1;
