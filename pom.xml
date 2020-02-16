@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
+    <name>Netty HTTP Authenticator</name>
+    <url>https://github.com/vzhn/netty-http-authenticator</url>
+    <developers>
+        <developer>
+            <name>Vladimir Zhilin</name>
+            <email>zhilin.vladimir.nic@gmail.com</email>
+        </developer>
+    </developers>
     <groupId>io.github.vzhn</groupId>
     <artifactId>netty-http-authenticator</artifactId>
     <description>HTTP authenticator for Netty</description>
