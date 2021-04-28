@@ -137,6 +137,11 @@ public final class ChallengeResponseParser extends CommonAuthHeadersParser {
                 readWord(",");
             }
         } while (hasNext());
+
+        if (challenge.getAlgorithm() == null) {
+            challenge.addAlgorithm(DigestAlgorithm.MD5);
+        }
+
         return challenge;
     }
 }
