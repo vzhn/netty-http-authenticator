@@ -3,8 +3,7 @@ package me.vzhilin.auth;
 import me.vzhilin.auth.digester.Digester;
 import me.vzhilin.auth.digester.Ha1;
 import me.vzhilin.auth.digester.Ha1Supplier;
-import me.vzhilin.auth.parser.ChallengeResponse;
-import me.vzhilin.auth.parser.QopOptions;
+import me.vzhilin.auth.parser.*;
 
 import java.util.Set;
 
@@ -35,7 +34,9 @@ public class DigestAuthenticator {
             digester.resetNonceCount();
         }
 
-        digester.setAlgorithm(response.getAlgorithm());
+        DigestAlgorithm algorithm = response.getAlgorithm();
+        digester.setAlgorithm(algorithm == null ? DigestAlgorithm.MD5 : algorithm);
+
         digester.setQop(chooseQop(response));
 
         this.opaque = response.getOpaque();
@@ -52,7 +53,7 @@ public class DigestAuthenticator {
             return QopOptions.AUTH_INT;
         }
 
-        return null;
+        return QopOptions.AUTH;
     }
 
     public String autorizationHeader(String method, String uri) {
