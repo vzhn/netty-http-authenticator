@@ -36,12 +36,12 @@ public final class DigestAuthenticatorTest extends Assert {
         authenticator.onResponseReceived(ChallengeResponse.of(firstResponse.getFirstHeader("WWW-Authenticate").getValue()),
             firstResponse.getStatusLine().getStatusCode());
 
-        request.setHeader("Authorization", authenticator.authorizationHeader("GET", uri.getPath()));
+        request.setHeader("Authorization", authenticator.autorizationHeader("GET", uri.getPath()));
         CloseableHttpResponse secondResponse = httpClient.execute(request);
         EntityUtils.consume(secondResponse.getEntity());
         assertEquals("expected authorized", 200, secondResponse.getStatusLine().getStatusCode());
 
-        request.setHeader("Authorization", authenticator.authorizationHeader("GET", uri.getPath()));
+        request.setHeader("Authorization", authenticator.autorizationHeader("GET", uri.getPath()));
         CloseableHttpResponse thirdResponse = httpClient.execute(request);
         EntityUtils.consume(thirdResponse.getEntity());
         assertEquals("ensure that digester is working", 200, thirdResponse.getStatusLine().getStatusCode());

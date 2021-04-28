@@ -138,6 +138,10 @@ public final class ChallengeResponseParser extends CommonAuthHeadersParser {
             }
         } while (hasNext());
 
+        if (challenge.getAlgorithm() == null) {
+            challenge.addAlgorithm(DigestAlgorithm.MD5);
+        }
+
         return challenge;
     }
 }

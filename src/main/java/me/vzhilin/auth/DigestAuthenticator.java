@@ -1,6 +1,8 @@
 package me.vzhilin.auth;
 
-import me.vzhilin.auth.digester.*;
+import me.vzhilin.auth.digester.Digester;
+import me.vzhilin.auth.digester.Ha1;
+import me.vzhilin.auth.digester.Ha1Supplier;
 import me.vzhilin.auth.parser.*;
 
 import java.util.Set;
@@ -22,11 +24,7 @@ public class DigestAuthenticator {
     }
 
     public DigestAuthenticator(String user, String pass) {
-        this(user, pass, DigestAlgorithm.MD5);
-    }
-
-    public DigestAuthenticator(String user, String pass, DigestAlgorithm defaultAlgorithm) {
-        this(new FallbackHa1Supplier((algorithm, realm) -> Ha1.hash(algorithm, user, realm, pass), defaultAlgorithm));
+        this((algorithm, realm) -> Ha1.hash(algorithm, user, realm, pass));
     }
 
     public synchronized void onResponseReceived(ChallengeResponse response, int httpStatus) {
@@ -36,7 +34,9 @@ public class DigestAuthenticator {
             digester.resetNonceCount();
         }
 
-        digester.setAlgorithm(response.getAlgorithm());
+        DigestAlgorithm algorithm = response.getAlgorithm();
+        digester.setAlgorithm(algorithm == null ? DigestAlgorithm.MD5 : algorithm);
+
         digester.setQop(chooseQop(response));
 
         this.opaque = response.getOpaque();
@@ -53,14 +53,14 @@ public class DigestAuthenticator {
             return QopOptions.AUTH_INT;
         }
 
-        return null;
+        return QopOptions.AUTH;
     }
 
-    public String authorizationHeader(String method, String uri) {
-        return authorizationHeader(method, uri, "");
+    public String autorizationHeader(String method, String uri) {
+        return autorizationHeader(method, uri, "");
     }
 
-    public synchronized String authorizationHeader(String method, String uri, String entityBody) {
+    public synchronized String autorizationHeader(String method, String uri, String entityBody) {
         if (digester.getNonce() == null) {
             return null;
         }
@@ -72,24 +72,5 @@ public class DigestAuthenticator {
         final String headerValue = header.toString();
         digester.incNonceCount();
         return headerValue;
-    }
-
-    private static final class FallbackHa1Supplier implements Ha1Supplier {
-        private final Ha1Supplier delegate;
-        private final DigestAlgorithm defaultAlgorithm;
-
-        public FallbackHa1Supplier(Ha1Supplier delegate, DigestAlgorithm defaultAlgorithm) {
-            this.delegate = delegate;
-            this.defaultAlgorithm = defaultAlgorithm;
-        }
-
-        @Override
-        public Ha1 hash(DigestAlgorithm algorithm, String realm) {
-            if (algorithm == null) {
-                return delegate.hash(defaultAlgorithm, realm);
-            } else {
-                return delegate.hash(algorithm, realm);
-            }
-        }
     }
 }
