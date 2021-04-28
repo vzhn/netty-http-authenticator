@@ -44,7 +44,7 @@ public class WebFluxDemo {
                             HttpRequest request = (HttpRequest) msg;
                             String authorization = request.headers().get(HttpHeaderNames.AUTHORIZATION);
                             if (authorization == null) {
-                                final String authorizationHeader = auth.autorizationHeader(request.method().name(), request.uri());
+                                final String authorizationHeader = auth.authorizationHeader(request.method().name(), request.uri());
                                 if (authorizationHeader != null) {
                                     request.headers().set(HttpHeaderNames.AUTHORIZATION, authorizationHeader);
                                 }
