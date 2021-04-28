@@ -53,7 +53,7 @@ public class DigestAuthenticator {
             return QopOptions.AUTH_INT;
         }
 
-        return QopOptions.AUTH;
+        return null;
     }
 
     public String authorizationHeader(String method, String uri) {

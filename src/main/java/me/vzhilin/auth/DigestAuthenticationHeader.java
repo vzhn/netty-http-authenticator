@@ -1,6 +1,7 @@
 package me.vzhilin.auth;
 
 import me.vzhilin.auth.digester.Digester;
+import me.vzhilin.auth.parser.QopOptions;
 
 public class DigestAuthenticationHeader {
     private final String username;
@@ -22,7 +23,8 @@ public class DigestAuthenticationHeader {
         this.uri = uri;
         this.opaque = opaque;
         this.algorithm = digester.getAlgorithm().toString();
-        this.qop = digester.getQop().toString();
+        QopOptions qop = digester.getQop();
+        this.qop = qop == null ? null : qop.toString();
         this.nc = digester.getNonceCountAsString();
         this.cnonce = digester.getCnonce();
     }
@@ -37,7 +39,7 @@ public class DigestAuthenticationHeader {
         sb.append("uri=\"").append(uri).append("\",");
         if (algorithm != null) sb.append("algorithm=").append(algorithm).append(",");
         sb.append("response=\"").append(response).append("\",");
-        sb.append("qop=").append(qop).append(",");
+        if (qop != null) sb.append("qop=").append(qop).append(",");
         sb.append("nc=").append(nc).append(",");
         sb.append("cnonce=\"").append(cnonce).append("\",");
         sb.setLength(sb.length() - 1);
