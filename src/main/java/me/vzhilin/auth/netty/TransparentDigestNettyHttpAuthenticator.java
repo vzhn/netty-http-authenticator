@@ -79,7 +79,7 @@ public class TransparentDigestNettyHttpAuthenticator extends ChannelDuplexHandle
                         if (authenticateHeader != null) {
                             authenticator.onResponseReceived(ChallengeResponse.of(authenticateHeader), status.code());
                         }
-                        final String auth = authenticator.autorizationHeader(request.method().name(), request.uri());
+                        final String auth = authenticator.authorizationHeader(request.method().name(), request.uri());
                         if (auth != null) {
                             request.headers().set(HttpHeaderNames.AUTHORIZATION, auth);
                         }
@@ -115,7 +115,7 @@ public class TransparentDigestNettyHttpAuthenticator extends ChannelDuplexHandle
                 String method = req.method().name();
                 String uri = req.uri();
 
-                req.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.autorizationHeader(method, uri));
+                req.headers().set(HttpHeaderNames.AUTHORIZATION, authenticator.authorizationHeader(method, uri));
             }
             // keep the client request
             // When server responds 401 Unauthorized, resend the request with authentication header
