@@ -60,7 +60,7 @@ public class DigestNettyHttpAuthenticator extends ChannelDuplexHandler {
 
             String method = req.method().name();
             String uri = req.uri();
-            final String header = authenticator.autorizationHeader(method, uri);
+            final String header = authenticator.authorizationHeader(method, uri);
             if (header != null) {
                 req.headers().set(HttpHeaderNames.AUTHORIZATION, header);
             }

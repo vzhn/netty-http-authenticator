@@ -56,11 +56,11 @@ public class DigestAuthenticator {
         return QopOptions.AUTH;
     }
 
-    public String autorizationHeader(String method, String uri) {
-        return autorizationHeader(method, uri, "");
+    public String authorizationHeader(String method, String uri) {
+        return authorizationHeader(method, uri, "");
     }
 
-    public synchronized String autorizationHeader(String method, String uri, String entityBody) {
+    public synchronized String authorizationHeader(String method, String uri, String entityBody) {
         if (digester.getNonce() == null) {
             return null;
         }
