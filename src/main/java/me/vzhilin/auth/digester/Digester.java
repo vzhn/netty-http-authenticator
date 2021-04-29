@@ -133,7 +133,7 @@ public class Digester {
         MessageDigest instance;
 
         try {
-            if (algorithm == DigestAlgorithm.MD5 || algorithm == DigestAlgorithm.MD5_SESS) {
+            if (algorithm == DigestAlgorithm.MD5 || algorithm == DigestAlgorithm.MD5_SESS || algorithm == null) {
                 instance = MessageDigest.getInstance("MD5");
             } else
             if (algorithm == DigestAlgorithm.SHA_256 || algorithm == DigestAlgorithm.SHA_256_SESS) {
