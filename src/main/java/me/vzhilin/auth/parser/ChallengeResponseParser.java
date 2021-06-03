@@ -78,14 +78,7 @@ public final class ChallengeResponseParser extends CommonAuthHeadersParser {
             if (readIfMatches("stale")) {
                 readWord("=");
                 String word = readUnquotedString();
-                if (word.equalsIgnoreCase("true")) {
-                    challenge.setStale(true);
-                } else
-                if (word.equalsIgnoreCase("false")) {
-                    challenge.setStale(false);
-                } else {
-                    throw new ParseException("expected: true | false", getPos());
-                }
+                challenge.setStale(word.equalsIgnoreCase("true") || word.equalsIgnoreCase("\"true\""));
             } else
             if (readIfMatches("algorithm")) {
                 readWord("=");
